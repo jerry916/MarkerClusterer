@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <title>百度地图点聚合</title>
+  <style type="text/css">
+        #map_container, #allmap{
+            width:100%;
+            height:100%;
+            min-height: 650px;
+        }
+        #projectInfo {
+            width: 32px;
+        }
+        #waterColor {
+            width: 82px;
+        }
+        .infotip .msg{
+            left: 40px;
+            position: absolute;
+            color: #595757;
+            font-size: 12px;
+            background-color: #fff !important;
+            height: 53px;
+            width: 140px;
+            padding: 10px 12px 10px 23px;
+            border: 1px solid #E4E4E4 !important;
+            z-index: 0;
+            margin: 48px 0 0 0;
+        }
+        .infotip .msg .title {
+            font-weight: 500;
+        }
+        .infotip .circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            float: left;
+            position: absolute;
+            z-index: 20;
+            left: 25px;
+            top: 82px !important;
+            border: solid 2px #fff;
+            box-shadow: 0 0 5px grey;
+            background-color: #fff !important;
+        }
+        .BMap_pop {
+            margin-top: 20px !important;
+        }
+        .BMap_pop div {
+            border-radius: 2px;
+            background: none !important;
+            border: 0px !important;
+        }
+        .BMap_pop div img {
+            z-index: 11;
+            display: none;
+        }
+        .infotip .circle > span {
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            -moz-border-radius: 17px;
+            -webkit-border-radius: 17px;
+            border-radius: 17px;
+            color: white;
+            align-items: center;
+            position: absolute;
+            margin: 1px;
+            text-align: center;
+            font-size: 12px;
+            background-color: #fff;
+        }
+        .anchorBL a img{
+            display: none;
+        }
+        .anchorBL span span{
+            display: none;
+        }
+        .BMap_shadow, .BMap_pop>img{
+            display: none;
+        }
+        .BMap_pop div{
+            border-radius: 2px;
+            top: 27px !important;
+        }
+        .arrows {
+            display: block;
+            position: absolute;
+            width: 12px;
+            height: 8px;
+            /*background: url('/frontend/images/icon-map-arrows.png') no-repeat;*/
+            top: 149px;
+            left: 87px;
+        }
+        .BMap_Marker {
+            border-radius: 50%;
+            border: 0px solid #fff !important;
+            margin: -1px !important;
+            box-shadow: 0px 0px 6px rgba(0, 0, 0, 0.6);
+        }
+    </style>
+</head>
+<body>
+  <div id="allmap"></div>
+</body>
+</html>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=C3610691ad8cd2eab4c1349d6be394b9"></script>
+<script src="http://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+<script type="text/javascript" src="js/TextIconOverlay.js"></script>
+<script type="text/javascript" src="js/MarkerClusterer.js"></script>
+
+<script type="text/javascript">
+    //初始化地图
+    var map = new BMap.Map("allmap", {
+        maxZoom: 17
+    });
+    map.centerAndZoom(new BMap.Point(120.585239, 31.298881), 13);
+    
+    //配置地图样式，隐藏地铁、公路
+    map.setMapStyle({
+        styleJson:[{
+            "featureType": "highway",
+            "elementType": "all",
+            "stylers": {
+                "visibility": "off"
+            }
+        }, {
+            "featureType": "local",
+            "elementType": "all",
+            "stylers": {
+                "visibility": "off"
+            }
+        }, {
+            "featureType": "railway",
+            "elementType": "all",
+            "stylers": {
+                "visibility": "off"
+            }
+        }, {
+            "featureType": "subway",
+            "elementType": "all",
+            "stylers": {
+                "visibility": "off"
+            }
+        }]
+    });
+
+    // 添加比例尺控件
+    var top_left_navigation = new BMap.NavigationControl();
+    map.addControl(top_left_navigation);
+    var top_left_control = new BMap.ScaleControl({anchor: BMAP_ANCHOR_BOTTOM_LEFT});
+    map.addControl(top_left_control);  
+
+    // 添加定位控件
+    var geolocationControl = new BMap.GeolocationControl({
+        showAddressBar: false,
+        offset: new BMap.Size(20, 20),
+        locationIcon: new BMap.Symbol(BMap_Symbol_SHAPE_POINT, {
+            scale: 1,
+            strokeWeight: 1,
+            strokeColor: 'white',
+            fillColor: 'red',
+            fillOpacity: 0.9
+        })
+    });
+
+    geolocationControl.addEventListener("locationSuccess", function(e){
+        console.log(e)  
+    });
+    geolocationControl.addEventListener("locationError",function(e){
+        alert('定位失败');
+    });
+
+    map.addControl(geolocationControl);
+
+    // 自定义项目介绍控件
+    function projectInfoControl(){
+      // 默认停靠位置和偏移量
+      this.defaultAnchor = BMAP_ANCHOR_TOP_LEFT;
+      this.defaultOffset = new BMap.Size(32, 16);
+    }
+
+    projectInfoControl.prototype = new BMap.Control();
+    projectInfoControl.prototype.initialize = function(map){
+        var img = document.createElement("img");
+　　　　 img.setAttribute("id", "projectInfo");
+　　　　 img.src = "/img/info.png";
+
+        img.onclick = function(e){
+         alert('info')
+        }
+        map.getContainer().appendChild(img);
+        return img;
+    }
+    map.addControl(new projectInfoControl());
+
+    //添加水质介绍图片
+    function waterColorControl(){
+      // 默认停靠位置和偏移量
+      this.defaultAnchor = BMAP_ANCHOR_TOP_RIGHT;
+      this.defaultOffset = new BMap.Size(10, 16);
+    }
+
+    waterColorControl.prototype = new BMap.Control();
+    waterColorControl.prototype.initialize = function(map){
+        var img = document.createElement("img");
+　　　　 img.setAttribute("id", "waterColor");
+　　　　 img.src = "/img/waterColor.png";
+        map.getContainer().appendChild(img);
+        return img;
+    }
+    map.addControl(new waterColorControl());
+
+    var datas = [{
+        'localtion': '120.585239,31.298881'
+    }, {
+        'localtion': '120.585239,31.298881'    
+    }, {
+        'localtion': '120.585239,31.298881'    
+    }, {
+        'localtion': '120.585239,31.298881'    
+    }, {
+        'localtion': '120.585239,31.298881'   
+    }]
+
+    var markers = [];
+    for (var i = 0; i < datas.length; i++) {
+        var data = datas[i];
+        var localtion = data.localtion.split(',');
+        var m = new BMap.Marker(new BMap.Point(localtion[0], localtion[1]));
+        m.data = data;
+        markers.push(m);
+    }
+
+    markerClustersPoint(markers);
+
+    //地图缩放重新计算聚合点
+    map.addEventListener("zoomend",function(){
+        markerClustersPoint(markers);
+    });
+
+
+    function markerClustersPoint(markers) {
+        var markerClusterer = new BMapLib.MarkerClusterer(map, {
+            markers: markers,
+            minClusterSize: 3, //最小的聚合数量，小于该数量的不能成为一个聚合，默认为2
+            styles: [{
+                url: 'img/info.png',
+                size: new BMap.Size(0, 0)
+            }]
+        });
+        // console.log(markerClusterer)
+        // 拿到所有的聚合点
+        var mk = markerClusterer._clusters;
+        var oldmk = [];
+
+        for (var i = 0; i < mk.length; i++) {
+            //小于3个marker不再进行标注
+            var mConut = mk[i]._markers.length;
+            if (3 > mConut) continue;
+            var options = [];
+
+            oldmk.push(addMarker(mk[i]._center));
+        }
+    }
+
+    //标记marker，显示infowindow
+    function addMarker(point){
+      var marker = new BMap.Marker(point, {
+            icon: new BMap.Symbol(BMap_Symbol_SHAPE_CIRCLE, {
+                scale: 10,
+                strokeWeight: 1,
+                strokeColor: 'white',
+                fillColor: 'red',
+                fillOpacity: 0.99
+            })
+        });  
+
+        var info = [
+            "<div class='infotip'>",
+                "<div class='circle'><span style='background-color:blue'>",
+                60 ,
+                "</span></div>",
+                "<div class='msg'><span class='title'>人数：</span>"+ 10 + "<br/><span class='title'>提示：</span>" + 'this is a test' +"</div><span class='arrows'></span>" ,
+            "</div>",
+        ].join('');
+
+        var infoWindow = new BMap.InfoWindow(info, {
+            maxWidth: 100,
+            maxHeight: 50
+        });
+
+        marker.addEventListener("click", function(){          
+            map.openInfoWindow(infoWindow,point); //开启信息窗口
+        });
+        map.addOverlay(marker);
+        return marker;
+    }
+    
+</script>
