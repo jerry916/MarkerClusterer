@@ -186,7 +186,7 @@
     projectInfoControl.prototype.initialize = function(map){
         var img = document.createElement("img");
 　　　　 img.setAttribute("id", "projectInfo");
-　　　　 img.src = "/img/info.png";
+　　　　 img.src = "./img/info.png";
 
         img.onclick = function(e){
          alert('info')
@@ -207,7 +207,7 @@
     waterColorControl.prototype.initialize = function(map){
         var img = document.createElement("img");
 　　　　 img.setAttribute("id", "waterColor");
-　　　　 img.src = "/img/waterColor.png";
+　　　　 img.src = "./img/waterColor.png";
         map.getContainer().appendChild(img);
         return img;
     }
